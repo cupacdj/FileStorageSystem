@@ -65,7 +65,7 @@ func newStore() *Store {
 	opts := StoreOpts{
 		PathTransformFunc: CASPathTransformFunc,
 	}
-	return NewStrore(opts)
+	return NewStore(opts)
 }
 
 func teardown(t *testing.T, s *Store) {

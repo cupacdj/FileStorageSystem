@@ -1,37 +1,47 @@
 package main
 
 import (
+	"bytes"
 	"filestoragesystem/p2p"
-	"fmt"
 	"log"
 )
 
-func OnPeer(p2p.Peer) error {
-	fmt.Println("doing some logic with the peer otside of TCPTransport")
-	return nil
-}
-func main() {
-
-	tcpOpts := p2p.TCPTransportOpts{
-		ListenAddr:    ":3000",
+func makeServer(listenAddr string, nodes ...string) *FileServer {
+	tcpTransportOpts := p2p.TCPTransportOpts{
+		ListenAddr:    listenAddr,
 		HandshakeFunc: p2p.NOPHandshakeFunc,
 		Decoder:       p2p.DefaultDecoder{},
-		OnPeer:        OnPeer,
 	}
 
-	tr := p2p.NewTCPTransport(tcpOpts)
+	tcpTransport := p2p.NewTCPTransport(tcpTransportOpts)
+
+	fileServerOpts := FileServerOpts{
+		StorageRoot:       listenAddr + "_network",
+		PathTransformFunc: CASPathTransformFunc,
+		Transport:         tcpTransport,
+		BootstrapNodes:    nodes,
+	}
+
+	s := NewFileServer(fileServerOpts)
+
+	tcpTransport.OnPeer = s.OnPeer
+
+	return s
+
+}
+
+func main() {
+	s1 := makeServer(":3000", "")
+	s2 := makeServer(":4000", ":3000")
 
 	go func() {
-		for {
-			msg := <-tr.Consume()
-			fmt.Printf("%+v\n", msg)
-		}
+		log.Fatal(s1.Start())
 	}()
 
-	if err := tr.ListenAndAccept(); err != nil {
-		log.Fatal(err)
-	}
+	s2.Start()
 
-	select {}
+	data := bytes.NewReader([]byte("my big data file here!"))
+
+	s2.StoreData("myprivatedata", data)
 
 }

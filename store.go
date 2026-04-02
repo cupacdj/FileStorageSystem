@@ -70,7 +70,7 @@ type Store struct {
 	StoreOpts
 }
 
-func NewStrore(opts StoreOpts) *Store {
+func NewStore(opts StoreOpts) *Store {
 	if opts.PathTransformFunc == nil {
 		opts.PathTransformFunc = DefaultPathTransformFunc
 	}
