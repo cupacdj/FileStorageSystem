@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"filestoragesystem/p2p"
 	"log"
+	"strings"
+	"time"
 )
 
 func makeServer(listenAddr string, nodes ...string) *FileServer {
@@ -16,7 +18,7 @@ func makeServer(listenAddr string, nodes ...string) *FileServer {
 	tcpTransport := p2p.NewTCPTransport(tcpTransportOpts)
 
 	fileServerOpts := FileServerOpts{
-		StorageRoot:       listenAddr + "_network",
+		StorageRoot:       strings.TrimPrefix(listenAddr, ":") + "_network",
 		PathTransformFunc: CASPathTransformFunc,
 		Transport:         tcpTransport,
 		BootstrapNodes:    nodes,
@@ -37,11 +39,14 @@ func main() {
 	go func() {
 		log.Fatal(s1.Start())
 	}()
+	time.Sleep(2 * time.Second)
 
-	s2.Start()
+	go s2.Start()
 
+	time.Sleep(2 * time.Second)
 	data := bytes.NewReader([]byte("my big data file here!"))
 
 	s2.StoreData("myprivatedata", data)
+	select {}
 
 }
