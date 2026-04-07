@@ -1,8 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"filestoragesystem/p2p"
+	"fmt"
+	"io"
 	"log"
 	"strings"
 	"time"
@@ -44,9 +45,19 @@ func main() {
 	go s2.Start()
 
 	time.Sleep(2 * time.Second)
-	data := bytes.NewReader([]byte("my big data file here!"))
+	// data := bytes.NewReader([]byte("my big data file here!"))
+	// s2.Store("coolPicture.jpg", data)
+	// time.Sleep(5 * time.Millisecond)
 
-	s2.StoreData("myprivatedata", data)
+	r, err := s2.Get("coolPicture.jpg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	b, err := io.ReadAll(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(b))
 	select {}
 
 }
