@@ -3,9 +3,26 @@ package main
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5"
 	"crypto/rand"
+	"encoding/hex"
 	"io"
 )
+
+// TODO: private and public key encryption for peer to peer communication and file encryption.
+
+func generateID() string {
+	// instead of 32 we could use public key
+	// every message we send will be signed with public key
+	buf := make([]byte, 32)
+	io.ReadFull(rand.Reader, buf)
+	return hex.EncodeToString(buf)
+}
+
+func hashKey(key string) string {
+	hash := md5.Sum([]byte(key))
+	return hex.EncodeToString(hash[:])
+}
 
 func newEncryptionKey() []byte {
 	keyBuf := make([]byte, 32)
@@ -53,24 +70,7 @@ func copyDecrypt(key []byte, src io.Reader, dst io.Writer) (int, error) {
 
 	stream := cipher.NewCTR(block, iv)
 	return copyStream(stream, block.BlockSize(), src, dst)
-	// for {
-	// 	n, err := src.Read(buf)
-	// 	if n > 0 {
-	// 		stream.XORKeyStream(buf[:n], buf[:n])
-	// 		nn, err := dst.Write(buf[:n])
-	// 		if err != nil {
-	// 			return 0, err
-	// 		}
-	// 		nw += nn
-	// 	}
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
-	// }
-	//return nw, nil
+
 }
 
 func copyEncrypt(key []byte, src io.Reader, dst io.Writer) (int, error) {
